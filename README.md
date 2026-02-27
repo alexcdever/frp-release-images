@@ -25,6 +25,17 @@ GitHub Actions workflow: `Track frp release and publish images`
 - Scheduled run: every 6 hours
 - Manual run: from Actions page, optional input `version` (example: `v0.65.0`)
 
+Manual input `version` behavior:
+
+- Leave empty: auto-detect upstream latest frp release tag
+- Set `version` (for example `v0.67.0`): force build that exact tag
+
+When to set `version` manually:
+
+- Rebuild an existing tag after CI/image issues
+- Backfill or republish a historical frp release
+- Validate a specific release without depending on latest
+
 Build source in CI:
 
 - Workflow checks out `fatedier/frp` at the target tag
