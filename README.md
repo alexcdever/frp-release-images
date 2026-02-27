@@ -8,7 +8,7 @@ This repository automates the full release flow:
 
 - Detect new upstream frp releases on schedule
 - Update tracked version in `FRP_VERSION`
-- Build multi-arch images (`linux/amd64`, `linux/arm64`)
+- Build multi-arch images (`linux/amd64`, `linux/arm64`) using upstream `fatedier/frp` Dockerfiles
 - Publish images to GHCR
 
 Published images:
@@ -24,6 +24,13 @@ GitHub Actions workflow: `Track frp release and publish images`
 
 - Scheduled run: every 6 hours
 - Manual run: from Actions page, optional input `version` (example: `v0.65.0`)
+
+Build source in CI:
+
+- Workflow checks out `fatedier/frp` at the target tag
+- Uses upstream Dockerfiles:
+  - `dockerfiles/Dockerfile-for-frps`
+  - `dockerfiles/Dockerfile-for-frpc`
 
 ## Runtime defaults
 

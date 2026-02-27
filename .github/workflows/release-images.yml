@@ -75,8 +75,13 @@ jobs:
       matrix:
         component: [frps, frpc]
     steps:
-      - name: Checkout
+      - name: Checkout upstream frp source
         uses: actions/checkout@v4
+        with:
+          repository: fatedier/frp
+          ref: ${{ needs.detect.outputs.version }}
+          path: upstream-frp
+          fetch-depth: 1
 
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v3
@@ -103,11 +108,9 @@ jobs:
       - name: Build and push ${{ matrix.component }}
         uses: docker/build-push-action@v6
         with:
-          context: .
-          file: docker/${{ matrix.component }}/Dockerfile
+          context: upstream-frp
+          file: upstream-frp/dockerfiles/Dockerfile-for-${{ matrix.component }}
           push: true
           platforms: linux/amd64,linux/arm64
-          build-args: |
-            FRP_VERSION=${{ needs.detect.outputs.version }}
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
