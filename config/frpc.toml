@@ -1,0 +1,12 @@
+serverAddr = "<your-frps-public-ip-or-domain>"
+serverPort = 7000
+
+auth.method = "token"
+auth.token = "change-this-token"
+
+[[proxies]]
+name = "ssh"
+type = "tcp"
+localIP = "127.0.0.1"
+localPort = 22
+remotePort = 6000

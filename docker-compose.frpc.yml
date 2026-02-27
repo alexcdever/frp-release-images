@@ -1,0 +1,7 @@
+services:
+  frpc:
+    image: ghcr.io/alexcdever/frpc:latest
+    container_name: frpc
+    restart: unless-stopped
+    volumes:
+      - ./config/frpc.toml:/etc/frp/frpc.toml:ro

@@ -1,23 +1,93 @@
 # frp-release-images
 
-Track upstream `fatedier/frp` releases and publish `frps` / `frpc` container images to GitHub Container Registry (GHCR).
+Track upstream `fatedier/frp` releases and publish `frps` / `frpc` images to GitHub Container Registry (GHCR).
 
-## What this repository does
+## Overview
 
-- Polls the latest frp release on a schedule
-- Updates `FRP_VERSION` when a new upstream version appears
-- Builds multi-arch images for `linux/amd64` and `linux/arm64`
-- Publishes images to GHCR:
-  - `ghcr.io/<owner>/frps:<version>`
-  - `ghcr.io/<owner>/frpc:<version>`
-  - `ghcr.io/<owner>/frps:latest`
-  - `ghcr.io/<owner>/frpc:latest`
+This repository automates the full release flow:
 
-## Manual release build
+- Detect new upstream frp releases on schedule
+- Update tracked version in `FRP_VERSION`
+- Build multi-arch images (`linux/amd64`, `linux/arm64`)
+- Publish images to GHCR
 
-Run the workflow `Track frp release and publish images` from Actions and optionally pass `version` (for example `v0.65.0`).
+Published images:
 
-## Default runtime commands
+- `ghcr.io/alexcdever/frps:<version>`
+- `ghcr.io/alexcdever/frps:latest`
+- `ghcr.io/alexcdever/frpc:<version>`
+- `ghcr.io/alexcdever/frpc:latest`
 
-- `frps` image default command: `frps -c /etc/frp/frps.toml`
-- `frpc` image default command: `frpc -c /etc/frp/frpc.toml`
+## Release workflow
+
+GitHub Actions workflow: `Track frp release and publish images`
+
+- Scheduled run: every 6 hours
+- Manual run: from Actions page, optional input `version` (example: `v0.65.0`)
+
+## Runtime defaults
+
+- `frps` default command: `frps -c /etc/frp/frps.toml`
+- `frpc` default command: `frpc -c /etc/frp/frpc.toml`
+
+## Docker Compose (split deployment)
+
+`frps` (server) and `frpc` (client) are typically deployed on different hosts. This repo provides two separate compose files:
+
+- `docker-compose.frps.yml`
+- `docker-compose.frpc.yml`
+
+### 1) Deploy frps (server host)
+
+1. Update `config/frps.toml`:
+   - Set a strong `webServer.password`
+   - Set a strong `auth.token`
+2. Start service:
+
+```bash
+docker compose -f docker-compose.frps.yml up -d
+```
+
+3. Check logs:
+
+```bash
+docker compose -f docker-compose.frps.yml logs -f
+```
+
+4. Stop service:
+
+```bash
+docker compose -f docker-compose.frps.yml down
+```
+
+### 2) Deploy frpc (client host)
+
+1. Update `config/frpc.toml`:
+   - Set `serverAddr` to your frps public IP/domain
+   - Set `auth.token` to the same value used by frps
+2. Start service:
+
+```bash
+docker compose -f docker-compose.frpc.yml up -d
+```
+
+3. Check logs:
+
+```bash
+docker compose -f docker-compose.frpc.yml logs -f
+```
+
+4. Stop service:
+
+```bash
+docker compose -f docker-compose.frpc.yml down
+```
+
+## Quick validation
+
+Before startup, validate compose files:
+
+```bash
+docker compose -f docker-compose.frps.yml config
+docker compose -f docker-compose.frpc.yml config
+```
