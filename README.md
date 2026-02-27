@@ -1,109 +1,109 @@
 # frp-release-images
 
-Track upstream `fatedier/frp` releases and publish `frps` / `frpc` images to GitHub Container Registry (GHCR).
+用于跟踪上游 `fatedier/frp` 的版本发布，并将 `frps` / `frpc` 镜像发布到 GitHub Container Registry (GHCR)。
 
-## Overview
+## 仓库说明
 
-This repository automates the full release flow:
+本仓库会自动完成以下流程：
 
-- Detect new upstream frp releases on schedule
-- Update tracked version in `FRP_VERSION`
-- Build multi-arch images (`linux/amd64`, `linux/arm64`) using upstream `fatedier/frp` Dockerfiles
-- Publish images to GHCR
+- 定时检测上游 frp 最新版本
+- 将跟踪版本写入 `FRP_VERSION`
+- 使用上游 `fatedier/frp` 的 Dockerfile 构建多架构镜像（`linux/amd64`、`linux/arm64`）
+- 将镜像推送到 GHCR
 
-Published images:
+已发布镜像：
 
 - `ghcr.io/alexcdever/frps:<version>`
 - `ghcr.io/alexcdever/frps:latest`
 - `ghcr.io/alexcdever/frpc:<version>`
 - `ghcr.io/alexcdever/frpc:latest`
 
-## Release workflow
+## 发布工作流
 
-GitHub Actions workflow: `Track frp release and publish images`
+GitHub Actions 工作流：`Track frp release and publish images`
 
-- Scheduled run: every 6 hours
-- Manual run: from Actions page, optional input `version` (example: `v0.65.0`)
+- 定时触发：每 6 小时一次
+- 手动触发：在 Actions 页面运行，可选输入 `version`（例如 `v0.65.0`）
 
-Manual input `version` behavior:
+手动输入 `version` 的行为：
 
-- Leave empty: auto-detect upstream latest frp release tag
-- Set `version` (for example `v0.67.0`): force build that exact tag
+- 留空：自动检测上游最新 release tag
+- 填写 `version`（例如 `v0.67.0`）：强制构建该指定版本
 
-When to set `version` manually:
+建议手动填写 `version` 的场景：
 
-- Rebuild an existing tag after CI/image issues
-- Backfill or republish a historical frp release
-- Validate a specific release without depending on latest
+- 需要重建某个已有版本（例如 CI 或镜像异常后）
+- 需要补发历史版本
+- 需要验证某个特定版本，而不是当前 latest
 
-Build source in CI:
+CI 构建来源：
 
-- Workflow checks out `fatedier/frp` at the target tag
-- Uses upstream Dockerfiles:
+- 工作流会 checkout `fatedier/frp` 对应 tag
+- 使用上游 Dockerfile：
   - `dockerfiles/Dockerfile-for-frps`
   - `dockerfiles/Dockerfile-for-frpc`
 
-## Runtime defaults
+## 容器默认启动命令
 
-- `frps` default command: `frps -c /etc/frp/frps.toml`
-- `frpc` default command: `frpc -c /etc/frp/frpc.toml`
+- `frps` 默认命令：`frps -c /etc/frp/frps.toml`
+- `frpc` 默认命令：`frpc -c /etc/frp/frpc.toml`
 
-## Docker Compose (split deployment)
+## Docker Compose（分离部署）
 
-`frps` (server) and `frpc` (client) are typically deployed on different hosts. This repo provides two separate compose files:
+`frps`（服务端）和 `frpc`（客户端）通常部署在不同主机。本仓库提供两个独立的 compose 文件：
 
 - `docker-compose.frps.yml`
 - `docker-compose.frpc.yml`
 
-### 1) Deploy frps (server host)
+### 1）部署 frps（服务端主机）
 
-1. Update `config/frps.toml`:
-   - Set a strong `webServer.password`
-   - Set a strong `auth.token`
-2. Start service:
+1. 修改 `config/frps.toml`：
+   - 设置强密码 `webServer.password`
+   - 设置强口令 `auth.token`
+2. 启动服务：
 
 ```bash
 docker compose -f docker-compose.frps.yml up -d
 ```
 
-3. Check logs:
+3. 查看日志：
 
 ```bash
 docker compose -f docker-compose.frps.yml logs -f
 ```
 
-4. Stop service:
+4. 停止服务：
 
 ```bash
 docker compose -f docker-compose.frps.yml down
 ```
 
-### 2) Deploy frpc (client host)
+### 2）部署 frpc（客户端主机）
 
-1. Update `config/frpc.toml`:
-   - Set `serverAddr` to your frps public IP/domain
-   - Set `auth.token` to the same value used by frps
-2. Start service:
+1. 修改 `config/frpc.toml`：
+   - 将 `serverAddr` 设置为 frps 的公网 IP 或域名
+   - 将 `auth.token` 设置为与 frps 一致
+2. 启动服务：
 
 ```bash
 docker compose -f docker-compose.frpc.yml up -d
 ```
 
-3. Check logs:
+3. 查看日志：
 
 ```bash
 docker compose -f docker-compose.frpc.yml logs -f
 ```
 
-4. Stop service:
+4. 停止服务：
 
 ```bash
 docker compose -f docker-compose.frpc.yml down
 ```
 
-## Quick validation
+## 启动前检查
 
-Before startup, validate compose files:
+启动前建议先校验 compose 文件：
 
 ```bash
 docker compose -f docker-compose.frps.yml config
